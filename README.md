@@ -13,21 +13,34 @@ Para executar este projeto, você precisará ter os seguintes pacotes e ferramen
 - Werkzeug (para manipulação de arquivos)
 ## Instalação
 1. Clone o repositório em sua máquina local:
-`git clone https://github.com/seu-usuario/seu-repositorio.git`
+```console
+git clone https://github.com/seu-usuario/seu-repositorio.git
+```
 2. Acesse o diretório do projeto:
-`cd seu-repositorio`
+```console
+cd seu-repositorio
+```
 3. Crie um ambiente virtual (opcional, mas recomendado):
-`python -m venv venv
-source venv/bin/activate  # No Windows use `venv\Scripts\activate``
+```console
+python -m venv venv
+source venv/bin/activate  # No Windows use `venv\Scripts\activate`
+```
 4. Instale as dependências do projeto:
-`pip install -r requirements.txt`
+```console
+pip install -r requirements.txt
+```
 5. Crie um arquivo .env na raiz do projeto e adicione sua chave da API Google Generative AI:
-`touch .env`
+```console
+touch .env
+```
 Dentro do arquivo .env, adicione a linha abaixo com sua chave da API:
-`API_KEY="sua-chave-da-api"`
+```
+API_KEY="sua-chave-da-api"
+```
 ## Como Executar
 1. Certifique-se de que o ambiente virtual está ativado (se você estiver usando um).
 2. Execute o seguinte comando para iniciar a aplicação:
-`python app.py`
-3. Acesse a aplicação no seu navegador no endereço:
-`http://127.0.0.1:5000`
+```
+python app.py
+```
+3. Acesse a aplicação no seu navegador no endereço: `http://127.0.0.1:5000`
