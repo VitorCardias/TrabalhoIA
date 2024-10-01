@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FridayIA</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="chat-container">
+        <h1>FridayIA</h1>
+        <form id="chat-form" action="/" method="POST" enctype="multipart/form-data">
+            <label for="prompt">Digite o seu prompt:</label><br>
+            <input type="text" id="prompt" name="prompt" required><br><br>
+
+            <label for="file">Envie uma imagem ou vídeo (opcional):</label><br>
+            <input type="file" id="file" name="file" accept="image/*,video/*"><br><br>
+
+            <input type="submit" value="Enviar">
+        </form>
+
+        <div id="loading-message" style="display:none;">
+            <p>Processando... Aguarde...</p>
+        </div>
+
+        {% if response %}
+        <div class="chat-message user">
+            <p><strong>Você:</strong> {{ request.form['prompt'] }}</p>
+        </div>
+
+        {% if file_url %}
+        <div class="chat-message file">
+            <p><strong>Arquivo enviado:</strong></p>
+            {% if file_url.endswith(('png', 'jpg', 'jpeg', 'gif')) %}
+            <img src="{{ file_url }}" alt="Imagem enviada" style="width: 10vw;">
+            {% elif file_url.endswith(('mp4', 'avi', 'mov', 'mkv')) %}
+            <video width="400" controls>
+                <source src="{{ file_url }}" type="video/mp4">
+                Seu navegador não suporta vídeos.
+            </video>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <div class="chat-message ai">
+            <p><strong>IA:</strong> {{ response }}</p>
+            <p class="processing_time"><small>Tempo de processamento: {{ processing_time }} segundos</small></p>
+        </div>
+        {% endif %}
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
