@@ -8,10 +8,10 @@
 </head>
 <body>
     <div class="chat-container">
-        <h1>FridayIA</h1>
+        <h1>TRABALHO IA</h1>
         <form id="chat-form" action="/" method="POST" enctype="multipart/form-data">
             <label for="prompt">Digite o seu prompt:</label><br>
-            <input type="text" id="prompt" name="prompt" required><br><br>
+            <input class="prompt_box" type="text" id="prompt" name="prompt" required><br><br>
 
             <label for="file">Envie uma imagem ou vídeo (opcional):</label><br>
             <input type="file" id="file" name="file" accept="image/*,video/*"><br><br>
@@ -27,7 +27,6 @@
         <div class="chat-message user">
             <p><strong>Você:</strong> {{ request.form['prompt'] }}</p>
         </div>
-
         {% if file_url %}
         <div class="chat-message file">
             <p><strong>Arquivo enviado:</strong></p>
@@ -43,7 +42,7 @@
         {% endif %}
 
         <div class="chat-message ai">
-            <p><strong>IA:</strong> {{ response }}</p>
+            <p><strong>IA:</strong> {{ response | markdown_to_html }}</p>
             <p class="processing_time"><small>Tempo de processamento: {{ processing_time }} segundos</small></p>
         </div>
         {% endif %}

@@ -1,11 +1,13 @@
-from flask import Flask, render_template, request, redirect, url_for, send_from_directory
+from flask import Flask, render_template, request, url_for, send_from_directory, session
 import os
+import markdown
 from werkzeug.utils import secure_filename
 import google.generativeai as genai
 import PIL.Image
 import time
 import datetime
 from dotenv import load_dotenv
+from markupsafe import Markup
 
 # Carrega as variáveis de ambiente
 load_dotenv()
@@ -17,6 +19,15 @@ genai.configure(api_key=os.getenv("API_KEY"))
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = './uploads'
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'avi', 'mov', 'mkv'}
+
+chat_session = None
+
+# Função para converter Markdown em HTML seguro
+def markdown_to_html(text):
+    return Markup(markdown.markdown(text))
+
+# Registra o filtro no Jinja
+app.jinja_env.filters['markdown_to_html'] = markdown_to_html
 
 # Função para checar extensão de arquivo permitida
 def allowed_file(filename):
@@ -67,6 +78,36 @@ def process_file(file_path):
         return file
     else:
         raise Exception("Tipo de arquivo não suportado. Use imagens ou vídeos.")
+    
+# Função para processar a conversa com os personagens
+def process_conversation(prompt, file_path):
+    global chat_session
+
+    history = session.get('history', [])
+    # Cria uma nova sessão se não existir
+    if chat_session is None:
+        chat_session = model.start_chat(
+            # ... (histórico inicial)
+            history=[
+                        {
+                            "role": "model",
+                            "parts": "Você é um caminhoneiro debochado e irônico. Suas respostas devem incluir gírias de caminhoneiro e referências a lugares por onde você já passou. Atualmente, você está em um posto de gasolina no meio da estrada."
+                        },
+            ]
+        )
+    if file_path:
+        # Adiciona o video ao histórico
+        history.append({"role": "user", "parts": [file_path]})
+    # Adiciona o prompt ao histórico
+    history.append({"role": "user", "parts": [prompt]})
+
+    # Envia a mensagem para a sessão existente
+    response = chat_session.send_message(prompt)
+
+    # Adiciona a resposta ao histórico
+    history.append({"role": "assistant", "parts": [response]})
+
+    return response
 
 # Rota para exibir arquivos de uploads
 @app.route('/uploads/<filename>')
@@ -97,37 +138,30 @@ def index():
             if isinstance(processed_file, PIL.Image.Image):
                 # Para imagens
                 inputs = [prompt, processed_file]
-                response = model.generate_content(inputs, stream=True)
+                response = process_conversation(inputs, False)
                 for chunk in response:
                     response_text += chunk.text
             else:
                 # Para vídeos
-                chat_session = model.start_chat(
-                    history=[
-                        {
-                            "role": "user",
-                            "parts": [processed_file],
-                        },
-                        {
-                            "role": "user",
-                            "parts": [prompt],
-                        },
-                    ]
-                )
-                response = chat_session.send_message(prompt)
-                response_text = response.text
+                response = process_conversation(prompt, processed_file)
+                for chunk in response:
+                    response_text += chunk.text
+                response_text = markdown.markdown(response_text)
         else:
             # Se nenhum arquivo for enviado, apenas gera o conteúdo com o prompt de texto
-            response = model.generate_content([prompt], stream=True)
+            response = process_conversation(prompt, False)
             for chunk in response:
                 response_text += chunk.text
 
         end_time = datetime.datetime.now()  # Tempo final de processamento
         processing_time = (end_time - start_time).total_seconds()  # Calcula o tempo em segundos
 
-        return render_template('index.html', response=response_text, file_url=file_url, processing_time=processing_time)
-
-    return render_template('index.html')
+        response_history = session.get('history', [])
+        return render_template('index.html', response=response_text, file_url=file_url, processing_time=processing_time, response_history=response_history)
+    
+    # Recupera o histórico ao renderizar a página
+    response_history = session.get('history', [])
+    return render_template('index.html', response_history=response_history)
 
 if __name__ == '__main__':
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
